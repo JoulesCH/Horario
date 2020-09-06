@@ -1,0 +1,162 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.express as px
+from dash.dependencies import Input, Output
+import pandas as pd
+
+external_stylesheets = ['https://codepen.io/amyoshino/pen/jzXypZ.css']
+
+df  = pd.read_csv('Cleande_df.csv')
+app = dash.Dash(__name__, external_stylesheets = external_stylesheets)
+first = [{'label': '-','value':'all'}]
+group_dict = [{'label': group,'value':group} for group in df['Grupo'].unique()]
+group_dict = first + group_dict
+app.title = 'ESFM | Horario'
+
+app.layout = html.Div( children = [
+    html.H3(children = 'Filtrar por grupo'),
+    html.Div(
+        children = dcc.Dropdown(id = 'Carrera', options = [{'label':'Ingeniería Matemática',
+                                                            'value':'LIM'},
+                                                            {'label':'Física y Matemáticas',
+                                                            'value':'LFM'}
+                                                            ],
+                                                value = 'LIM',
+                                                searchable = False,
+                                                clearable = False),
+        style = {
+            'margin':40,
+            'width': 250,
+            'margin-bottom':10,
+            'margin-top': 20
+        }
+    
+    ),
+    html.Div(
+        children = dcc.Dropdown(id = 'Semestre', #options = group_dict,
+                                                value = '1MV2',
+                                                searchable = False,
+                                                clearable = False),
+        style = {
+            'margin':40,
+            'width': 250,
+            'margin-top':0,
+            'margin-bottom':20
+        }
+    
+    ),
+
+    html.Table(id = 'First_table',style = {
+                                            'textAlign': 'center',
+                                            'margin':80,
+                                            'margin-top':10,
+                                            'margin-left':'auto',
+                                            'margin-right':'auto',
+                                            'margin-bottom':40,
+                                            'width': 1100
+                                           }
+    ),
+    html.H3(children = 'Filtrar por materia'),
+    html.Div(
+        children = dcc.Dropdown(id = 'Carrera_2', options = [{'label':'Ingeniería Matemática',
+                                                            'value':'LIM'},
+                                                            {'label':'Física y Matemáticas',
+                                                            'value':'LFM'}
+                                                            ],
+                                                value = 'LIM',
+                                                searchable = False,
+                                                clearable = False),
+        style = {
+            'margin':40,
+            'width': 250,
+            'margin-bottom':10,
+            'margin-top': 20
+        }
+    
+    ),
+    html.Div(
+        children = dcc.Dropdown(id = 'Materia', #options = group_dict,
+                                                value = '1MV2',
+                                                #searchable = False,
+                                                clearable = False),
+        style = {
+            'margin':40,
+            'width': 450,
+            'margin-top':0,
+            'margin-bottom':20
+        }
+    
+    ),
+
+    html.Table(id = 'second_table',style = {
+                                            'textAlign': 'center',
+                                            'margin':80,
+                                            'margin-top':10,
+                                            'margin-left':'auto',
+                                            'margin-right':'auto',
+                                            'margin-bottom':40,
+                                            'width': 1100
+                                           }
+    )
+
+
+   
+
+]
+)
+
+@app.callback(Output('Semestre','options'),[Input('Carrera','value')])
+def set_dict(carrera):
+    global group_dict
+    first = [{'label': '-','value':'all'}]
+    group_dict = [{'label': group,'value':group} for group in df[df['Programa']== carrera]['Grupo'].unique()]
+    group_dict = first + group_dict
+    return group_dict
+
+@app.callback(Output('Materia','options'),[Input('Carrera_2','value')])
+def set_2dict(carrera):
+    global group_dict
+    first = [{'label': '-','value':'all'}]
+    group_dict = [{'label': materia,'value':materia} for materia in df[df['Programa']== carrera]['Unidad de aprendizaje'].unique()]
+    group_dict = first + group_dict
+    return group_dict
+
+@app.callback(Output('First_table','children'),[Input('Semestre','value'),Input('Carrera','value')])
+def generate_table(semestre,carrera, dataframe = df, max_rows = 100):
+    if semestre:
+        if semestre != 'all':
+            dataframe = dataframe[(dataframe['Programa']==carrera) & (dataframe['Grupo'] == semestre)]
+        else:
+            dataframe = dataframe[(dataframe['Programa']==carrera)]
+        dataframe = dataframe.drop('Unnamed: 0',axis = 1).iloc[:,[0,1,3,5,6,7,8,9,10,16]]
+        return [ html.Thead(
+                    html.Tr([html.Th(col) for col in dataframe.columns])
+                ),
+
+                html.Tbody([html.Tr([
+                        html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+                    ]) for i in range(min(len(dataframe), max_rows))
+                ], style = {'color':'#414242' })
+
+            ]
+
+@app.callback(Output('second_table','children'),[Input('Materia','value'),Input('Carrera_2','value')])
+def generate_table(materia,carrera, dataframe = df, max_rows = 100):
+    if materia:
+        dataframe = dataframe[(dataframe['Programa']==carrera) & (dataframe['Unidad de aprendizaje']==materia)]
+
+        dataframe = dataframe.drop('Unnamed: 0',axis = 1).iloc[:,[0,1,3,5,6,7,8,9,10,16]]
+        return [ html.Thead(
+                    html.Tr([html.Th(col) for col in dataframe.columns])
+                ),
+
+                html.Tbody([html.Tr([
+                        html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+                    ]) for i in range(min(len(dataframe), max_rows))
+                ], style = {'color':'#414242' })
+
+            ]
+
+if __name__ == '__main__':
+    app.run_server(debug = True)
