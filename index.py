@@ -98,7 +98,29 @@ app.layout = html.Div( children = [
                                             'margin-bottom':40,
                                             'width': 1100
                                            }
-    )
+    ),
+    html.Footer(children= [
+                                         html.Div(children = ['Made by Joules CH -  ',
+                                                                html.A('GitHub',href = 'https://github.com/JoulesCH') 
+                                                        ], 
+                                                style = {
+                                                    'textAlign': 'center',
+                                                    'margin': 10,
+                                                    'margin-left': 'auto',
+                                                    'margin-right': 'auto'
+                                                 }
+                                         )
+                                    ],
+                                style={
+                                        'width': 777,
+                                        'border-top-style': 'double',
+                                        'border-top-color': '#1866B9',
+                                        'margin-left': 'auto',
+                                        'margin-right': 'auto',
+                                        'margin-top': 15
+                                        
+                                }
+                    )
 
 
    
